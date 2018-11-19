@@ -1,24 +1,23 @@
-#encoding:utf-8
-#
-#created by xiongzihua
-#
-'''
-txt描述文件 image_name.jpg x y w h c x y w h c 这样就是说一张图片中有两个目标
-'''
-import os
-import sys
-import os.path
-import cv2
-
-import random
-import numpy as np
+# encoding:utf-8
+# dataset loader for VOC dataset. 
+"""
+how to use 
+testdata = Yolodata(file_root = 'xxx/VOCdevkit/VOC2012/JPEGImages/', listano = 'xxx/voc2012.txt',batchsize=2)
+"""
 
 import torch
 import torch.utils.data as data
 import torchvision.transforms as transforms
 
 from PIL import Image
-import matplotlib.pyplot as plt
+import cv2
+
+import os
+import sys
+import os.path
+
+import random
+import numpy as np
 
 def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
@@ -80,17 +79,16 @@ class VOCDataset(data.Dataset):
         img = self.loader(os.path.join(self.root+fname))
         boxes = self.boxes[idx].clone()
         labels = self.labels[idx].clone()
-        img,boxes,labels = self.cvtransform(img,boxes,labels) # 各种变换用torch 自带的的transform做不到，所以借鉴了xiongzihua 的git hub上的代码写了一点cv变换
+        if self.train:
+            img,boxes,labels = self.cvtransform(img,boxes,labels) # 各种变换用torch 自带的的transform做不到，所以借鉴了xiongzihua 的git hub上的代码写了一点cv变换
         h,w,_= img.shape
         boxes /= torch.Tensor([w,h,w,h]).expand_as(boxes)
-        #print('bounding box is ')
-        ##print(labels)
-        #target = self.encoder(boxes,labels)# 7x7x30
+
         target = self.make_target(labels,boxes)
         target = torch.tensor(target).float()
 
         img = self.BGR2RGB(img) #because pytorch pretrained model use RGB
-        #img = self.subMean(img,self.mean) #减去均值
+
         img = cv2.resize(img,(self.image_size,self.image_size))
 
         if self.transform is not None:
@@ -114,31 +112,6 @@ class VOCDataset(data.Dataset):
 
     def __len__(self):
         return self.num_samples
-
-    def encoder(self,boxes,labels):
-        '''
-        boxes (tensor) [[x1,y1,x2,y2],[]]
-        labels (tensor) [...]
-        return [self.S, self.S, self.B*5+self.C]
-        '''
-        grid_num = 14
-        target = torch.zeros((grid_num,grid_num,30))
-        cell_size = 1./grid_num
-        wh = boxes[:,2:]-boxes[:,:2] #这是x-x2和 y-y2
-        cxcy = (boxes[:,2:]+boxes[:,:2])/2 #这时中心点坐标
-        for i in range(cxcy.size()[0]):
-            cxcy_sample = cxcy[i]
-            ij = (cxcy_sample/cell_size).ceil()-1 #
-            target[int(ij[1]),int(ij[0]),4] = 1
-            target[int(ij[1]),int(ij[0]),9] = 1
-            target[int(ij[1]),int(ij[0]),int(labels[i])+9] = 1
-            xy = ij*cell_size #匹配到的网格的左上角相对坐标
-            delta_xy = (cxcy_sample -xy)/cell_size
-            target[int(ij[1]),int(ij[0]),2:4] = wh[i]
-            target[int(ij[1]),int(ij[0]),:2] = delta_xy
-            target[int(ij[1]),int(ij[0]),7:9] = wh[i]
-            target[int(ij[1]),int(ij[0]),5:7] = delta_xy
-        return target
     
     def change_box_to_center_axes(self, bboxes):
         rebboxes = []
@@ -151,7 +124,7 @@ class VOCDataset(data.Dataset):
     def make_target(self, labels, bboxes):
         """make location np.ndarray from bboxes of an image
         
-        Parameters
+        Input
         ----------
         labels : list
             [0, 1, 4, 2, ...]
@@ -163,7 +136,6 @@ class VOCDataset(data.Dataset):
         -------
         np.ndarray
             [self.S, self.S, self.B*5+self.C]
-            location array
         """
 
         bboxes = self.change_box_to_center_axes(bboxes)
@@ -188,10 +160,10 @@ class VOCDataset(data.Dataset):
         w = bboxes[:, 2].reshape(-1, 1)
         h = bboxes[:, 3].reshape(-1, 1)
 
-        x_idx = np.ceil(x_center * self.S) - 1
+        x_idx = np.ceil(x_center * self.S) - 1 # 看这个bounding box 在哪个grid 里面
         y_idx = np.ceil(y_center * self.S) - 1
         # for exception 0, ceil(0)-1 = -1
-        x_idx[x_idx<0] = 0
+        x_idx[x_idx<0] = 0 
         y_idx[y_idx<0] = 0
 
         # calc offset of x_center, y_center
@@ -351,7 +323,7 @@ class VOCDataset(data.Dataset):
         return im
 
 class Yolodata():
-    def __init__(self, file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', listano = './voc2012.txt',batchsize=2):
+    def __init__(self, train_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', train_listano = './voc2012.txt', test_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', test_listano = './voc2012.txt' ,batchsize=2):
         transform_train = transforms.Compose([
                        #transforms.Resize(448),
                        #transforms.RandomCrop(448),
@@ -359,7 +331,7 @@ class Yolodata():
                        transforms.ToTensor(),
                        transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
 
-        img_data = VOCDataset(root = file_root,list_file=listano,train=True,transform=transform_train,loader = cv_loader)
+        img_data = VOCDataset(root = train_file_root,list_file=train_listano,train=True,transform=transform_train,loader = cv_loader)
         train_loader = torch.utils.data.DataLoader(img_data, batch_size=batchsize,shuffle=True)
         self.train_loader = train_loader
         #self.img_data=img_data
@@ -370,7 +342,7 @@ class Yolodata():
                         transforms.ToTensor(),
                         transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
 
-        img_data_t = VOCDataset(root = file_root,list_file='voc2012.txt',train=False,transform=transform_test,loader = cv_loader)
+        img_data_t = VOCDataset(root = test_file_root,list_file=test_listano,train=False,transform=transform_test,loader = cv_loader)
         test_loader = torch.utils.data.DataLoader(img_data_t, batch_size=int(0.5*batchsize),shuffle=False)
         self.test_loader = test_loader
     
@@ -388,7 +360,7 @@ class Yolodata():
 
 if __name__ == '__main__':
     #testdata = Yolodata(file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', listano = './voc2012.txt',batchsize=2)
-    testdata = Yolodata(file_root = '/Users/duanyiqun/Downloads/VOCdevkit/VOC2012/JPEGImages/', listano = './voc2012.txt',batchsize=2)
+    testdata = Yolodata(train_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', train_listano = './voc2012.txt', test_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', test_listano = './voc2012.txt' ,batchsize=2)
     testdata.test()
 
 
