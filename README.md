@@ -47,3 +47,5 @@ optional arguments:
   --mname MNAME         experimentname
 ```
 Same to most of other implementations, you should firstly run [xml2txt.py](https://github.com/DuanYiqun/pytorch_implementation_of_Yolov1/blob/master/xml_2_txt.py) to change xml annotaitons of VOC dataset to a txt file which contains bounding boxes and classes line by line.    
+This repository is writted as review, part of functions still under construction due to limited time, but the part for training has already completed and tested. 
+Part of the functions in dataset.py and yololoss.py referenced to several existed blogs. 
