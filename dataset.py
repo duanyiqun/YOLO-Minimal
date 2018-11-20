@@ -93,7 +93,7 @@ class VOCDataset(data.Dataset):
 
         if self.transform is not None:
             img = self.transform(img)
-        print(img)
+        #print(img)
         
         return img,target
     

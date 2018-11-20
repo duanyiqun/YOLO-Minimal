@@ -11,7 +11,7 @@ from resnet import resnet50
 from yoloLoss import YoloLoss
 from dataset import Yolodata
 import numpy as np
-from visualize import Visualizer
+#from visualize import Visualizer
 import numpy as np
 import pandas as pd
 
@@ -40,7 +40,9 @@ best_loss = 1000000
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 print('loading dataset ...')
-Datasetinstance = Yolodata(train_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', train_listano = './voc2012.txt', test_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', test_listano = './voc2012.txt' ,batchsize=args.batch_size, snumber = args.sgrid, bnumber = args.bbxnumber, cnumber = args.classnumber)
+
+#Datasetinstance = Yolodata(train_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', train_listano = './voc2012.txt', test_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', test_listano = './voc2012.txt' ,batchsize=args.batch_size, snumber = args.sgrid, bnumber = args.bbxnumber, cnumber = args.classnumber)
+Datasetinstance = Yolodata(train_file_root = '/Users/duanyiqun/Downloads/VOCdevkit/VOC2012/JPEGImages/', train_listano = './voc2012.txt', test_file_root = '/Users/duanyiqun/Downloads/VOCdevkit/VOC2012/JPEGImages/', test_listano = './voc2012.txt' ,batchsize=args.batch_size, snumber = args.sgrid, bnumber = args.bbxnumber, cnumber = args.classnumber)
 train_loader, test_loader = Datasetinstance.getdata()
 
 print('the dataset has %d images for train' % (len(train_loader)))
@@ -162,13 +164,16 @@ def extract(m):
         sparses.append(torch.mean(cc.abs()).detach().numpy())
 
 for epoch in range(args.num_epochs):
+    learning_rate = args.lr
     if epoch == 30:
         learning_rate=0.001
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = learning_rate
     if epoch == 45:
         learning_rate=0.0001
     #optimizer = torch.optim.SGD(net.parameters(),lr=learning_rate,momentum=0.9,weight_decay=1e-4)
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = learning_rate
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = learning_rate
     
     print('\n\nStarting epoch %d / %d' % (epoch + 1, args.num_epochs))
     print('Learning Rate for this epoch: {}'.format(learning_rate))
