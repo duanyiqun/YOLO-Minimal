@@ -323,7 +323,10 @@ class VOCDataset(data.Dataset):
         return im
 
 class Yolodata():
-    def __init__(self, train_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', train_listano = './voc2012.txt', test_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', test_listano = './voc2012.txt' ,batchsize=2):
+    def __init__(self, train_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', train_listano = './voc2012.txt', test_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', test_listano = './voc2012.txt' ,batchsize=2, snumber = 7, bnumber = 2, cnumber = 20):
+        self.S = snumber
+        self.B = bnumber
+        self.C = cnumber
         transform_train = transforms.Compose([
                        #transforms.Resize(448),
                        #transforms.RandomCrop(448),
@@ -331,7 +334,7 @@ class Yolodata():
                        transforms.ToTensor(),
                        transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
 
-        img_data = VOCDataset(root = train_file_root,list_file=train_listano,train=True,transform=transform_train,loader = cv_loader)
+        img_data = VOCDataset(root = train_file_root,list_file=train_listano,train=True,transform=transform_train,loader = cv_loader,snumber=self.S, bnumber=self.B, cnumber=self.C)
         train_loader = torch.utils.data.DataLoader(img_data, batch_size=batchsize,shuffle=True)
         self.train_loader = train_loader
         #self.img_data=img_data
