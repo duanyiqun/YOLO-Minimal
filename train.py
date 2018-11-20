@@ -24,11 +24,12 @@ parser.add_argument('--experimentname',default='sdmnv5_vscommon', type=str, help
 parser.add_argument('--trainroot',default='/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', type=str, help='for train images')
 parser.add_argument('--testroot',default='/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', type=str, help='for test images')
 parser.add_argument('--indexdir',default='./data/yolo_train_on_VOC2012.csv', type=str, help='log direction for save')
-parser.add_argument('--batch_size',default=12, type=int, help='batch size')
+parser.add_argument('--batch_size',default=20, type=int, help='batch size')
 parser.add_argument('--num_epochs',default=50, type=int, help='training length')
 parser.add_argument('--sgrid',default=7, type=int, help='grid number 7*7 for default')
 parser.add_argument('--bbxnumber',default=2, type=int, help='bounding box number')
 parser.add_argument('--classnumber',default=20, type=int, help='class number default is 20')
+parser.add_argument('--mname',default='train50', type=str, help='experimentname')
 
 
 args = parser.parse_args()
@@ -40,9 +41,7 @@ best_loss = 1000000
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 print('loading dataset ...')
-
-#Datasetinstance = Yolodata(train_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', train_listano = './voc2012.txt', test_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', test_listano = './voc2012.txt' ,batchsize=args.batch_size, snumber = args.sgrid, bnumber = args.bbxnumber, cnumber = args.classnumber)
-Datasetinstance = Yolodata(train_file_root = '/Users/duanyiqun/Downloads/VOCdevkit/VOC2012/JPEGImages/', train_listano = './voc2012.txt', test_file_root = '/Users/duanyiqun/Downloads/VOCdevkit/VOC2012/JPEGImages/', test_listano = './voc2012.txt' ,batchsize=args.batch_size, snumber = args.sgrid, bnumber = args.bbxnumber, cnumber = args.classnumber)
+Datasetinstance = Yolodata(train_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', train_listano = './voc2012.txt', test_file_root = '/home/claude.duan/data/VOCdevkit/VOC2012/JPEGImages/', test_listano = './voc2012.txt' ,batchsize=args.batch_size, snumber = args.sgrid, bnumber = args.bbxnumber, cnumber = args.classnumber)
 train_loader, test_loader = Datasetinstance.getdata()
 
 print('the dataset has %d images for train' % (len(train_loader)))
@@ -93,7 +92,7 @@ def train(epoch):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         pred = net(inputs)
-        loss = criterion(pred,target)
+        loss = criterion(pred,targets)
         loss.backward()
         optimizer.step()
 
@@ -117,7 +116,7 @@ def test(epoch):
     for batch_idx, (inputs, targets) in enumerate(test_loader):
         inputs, targets = inputs.to(device), targets.to(device)
         pred = net(inputs)
-        loss = criterion(pred,target)
+        loss = criterion(pred,targets)
 
         test_loss += loss.item()
 
@@ -174,7 +173,7 @@ for epoch in range(args.num_epochs):
     #optimizer = torch.optim.SGD(net.parameters(),lr=learning_rate,momentum=0.9,weight_decay=1e-4)
         for param_group in optimizer.param_groups:
             param_group['lr'] = learning_rate
-    
+            
     print('\n\nStarting epoch %d / %d' % (epoch + 1, args.num_epochs))
     print('Learning Rate for this epoch: {}'.format(learning_rate))
     nd = train(epoch)

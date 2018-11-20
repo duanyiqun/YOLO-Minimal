@@ -217,4 +217,4 @@ def test_resenet():
     y= net(Variable(x))
     print(y.size())
 
-test_resenet()
+#test_resenet()
