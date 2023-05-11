@@ -51,7 +51,7 @@ This repository is writted as review, part of functions still under construction
 Part of the functions in dataset.py and yololoss.py referenced to several existed blogs.
 
 
-
+Below are some 
 
 
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
@@ -61,7 +61,7 @@ Part of the functions in dataset.py and yololoss.py referenced to several existe
 
 Object detection有很多种深度学习的办法可以实现，其中yolo是一个比较快速的办法。文章主旨在于神经网络无需反复迭代某个区域进行特征提取而采取straight foward 的形式。 Yolo 仅仅使用卷基层，而没有down-sampling的过程即没有下采样池化过程这样决定了yolo对图片大小并不敏感。 在yolo中也采用了不少skip connection和上采样层。第一篇[YOLO](https://arxiv.org/pdf/1506.02640.pdf) 自我介绍说是根据人眼只看图片一眼就可以识别出物体到底在哪里。 原文如下： Humans glance at an image and instantly know what objects are in the image, where they are, and how they interact。 论文中提出这样的结构主要针对这样的一个现状： 目前其他的obj-detection模型是用sliding window 找出哪里是带检测对象，然后不断的去调用一个相对独立的结构来检测对象是什么分类。比如说最近的R-CNN是先用region proposal mehtod 生成一些潜在的bounding box 然后再在这些bounding box 里面跑一个分类器。 这样的检测模式第一比较慢，第二对于物体分布很多的图片识别起来准确率不高。 
 
-个人认为 yolo net 的核心就在于将obj-detection和分类一样变成了一个regression 问题。从而实现了end-end 训练的结果。一共就三步： 
+yolo net 将obj-detection和分类一样变成了一个regression 问题。从而实现了end-end 训练的结果。一共就三步： 
 
 1. resizesthe input image to 448 × 448, 
 2. runs a single convolutional network on the image, and
@@ -93,7 +93,7 @@ Object detection有很多种深度学习的办法可以实现，其中yolo是一
 
 ### 数据集和数据加载
 
-在object detection方面， 公开数据集主要有VOC和COCO 数据集两种。 因为这篇文章是复习和练习， 所以可以采用VOC数据集。VOC是一个公开的Obj detection数据集，里面也有人体动作和segmentation的标注数据。 VOC 数据来源于曾经的2007-2012年的公开竞赛。 虽然竞赛已经结束，但是数据还是可以下载到，链接如下：
+在object detection方面， 公开数据集主要有VOC和COCO 数据集两种。 可以采用VOC数据集。VOC是一个公开的 Object detection 数据集，里面也有人体动作和segmentation的标注数据。 VOC 数据来源于曾经的2007-2012年的公开竞赛。 虽然竞赛已经结束，但是数据还是可以下载到，链接如下：
 
 [training/validation data](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar)
 
@@ -358,8 +358,6 @@ def train(epoch):
     return data
 
 ```
-
-此篇博客是属于复习中的产物，仓促之下写的不算太规整，留待以后更新。
 
 
 
